@@ -3,6 +3,12 @@
 
 ---
 
+## Conteúdo / Contents
+* [🇧🇷 Versão em Português](#-versão-em-português)
+* [🇬🇧 English Version](#-english-version)
+
+---
+
 ## 🇧🇷 Versão em Português
 
 Este projeto implementa uma Skill de Smart Home para a Alexa que se integra com o Home Assistant, utilizando AWS Lambda e DynamoDB. Ele oferece uma alternativa robusta e sem custos de assinatura ao Home Assistant Cloud (Nabu Casa), com foco em sincronização em tempo real e controle total.
@@ -288,7 +294,7 @@ The system operates in two main flows:
 2.  **Create Skill**: Name it, select the **"Smart Home"** model, and **"Provision your own"** hosting.
 3.  Save the configuration.
 
-#### Parte 2: AWS Setup (IAM, DynamoDB, & Lambda)
+#### Part 2: AWS Setup (IAM, DynamoDB, & Lambda)
 
 1.  **DynamoDB Table:**
     * Go to the **DynamoDB** service.
