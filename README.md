@@ -1,5 +1,5 @@
 # Skill Alexa para Home Assistant com Sincronização em Tempo Real via AWS
-# Alexa Skill for Home Assistant with Real-Time Sync via AWS
+### _Alexa Skill for Home Assistant with Real-Time Sync via AWS_
 
 ### 🇧🇷 Versão em Português
 
