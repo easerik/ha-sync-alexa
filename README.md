@@ -211,18 +211,10 @@ O sistema opera em dois fluxos principais:
 
 Para que a **Skill Alexa** funcione corretamente, são necessárias as seguintes permissões para acessar recursos e funcionalidades. Você as configurará no **Amazon Developer Console**, dentro da sua skill:
 
-1.  No menu lateral da skill, vá para **"Account Linking"**.
-    * **Marque a opção "Auth Code Grant"**.
-    * **Authorization URI:** `https://www.amazon.com/ap/oa`
-    * **Access Token URI:** `https://api.amazon.com/auth/o2/token`
-    * Anote o **Client ID** e o **Client Secret**.
-    * **Scope:** Adicione `alexa::skill_messaging`.
-    * Salve as configurações.
-
-2.  Habilite o envio de eventos da Alexa:
+1.  **Habilite o envio de eventos da Alexa:**
     * Na seção de **"Permissões"** ou **"Build"** (a localização exata pode variar ligeiramente na interface), você deve habilitar sua skill para **enviar mensagens para o endpoint de Eventos de Entrada da Alexa**. Isso autoriza sua skill a responder de forma assíncrona às diretivas da Alexa e a enviar eventos de mudança de estado.
     * Procure por uma seção relacionada a **"Alexa Skill Messaging"** ou **"Send Alexa Events"**. Ao habilitar, você obterá o:
-        * **Alexa Client Id:** `amzn1.application-oa2-client.edf447576ac8496cb907f2da4d7e5d89` (Este será gerado para sua skill).
+        * **Alexa Client Id:** `amzn1.application-oa2-client.****` (Este será gerado para sua skill).
         * **Alexa Client Secret:** `**************************************************************************************` (Este também será gerado para sua skill; clique em **SHOW** para visualizá-lo).
 
 ---
@@ -431,19 +423,11 @@ The system operates in two main flows:
 
 For the **Alexa Skill** to function correctly, the following permissions are required to access resources and capabilities. You will configure them in the **Amazon Developer Console**, within your skill:
 
-1.  In the skill's side menu, go to **"Account Linking"**.
-    * **Select "Auth Code Grant"**.
-    * **Authorization URI:** `https://www.amazon.com/ap/oa`
-    * **Access Token URI:** `https://api.amazon.com/auth/o2/token`
-    * Note the **Client ID** and **Client Secret**.
-    * **Scope:** Add `alexa::skill_messaging`.
-    * Save the configuration.
-
-2.  Enable sending Alexa Events:
-    * In the **"Permissions"** or **"Build"** section (the exact location might vary slightly in the interface), you must enable your skill to **send messages to the Alexa Inbound Event endpoint**. This authorizes your skill to asynchronously respond to Alexa directives and send state change events.
-    * Look for a section related to **"Alexa Skill Messaging"** or **"Send Alexa Events"**. Upon enabling, you will obtain the:
-        * **Alexa Client Id:** `amzn1.application-oa2-client.edf447576ac8496cb907f2da4d7e5d89` (This will be generated for your skill).
-        * **Alexa Client Secret:** `**************************************************************************************` (This also will be generated for your skill; click **SHOW** to reveal it).
+1.  **Habilite o envio de eventos da Alexa:**
+    * Na seção de **"Permissões"** ou **"Build"** (a localização exata pode variar ligeiramente na interface), você deve habilitar sua skill para **enviar mensagens para o endpoint de Eventos de Entrada da Alexa**. Isso autoriza sua skill a responder de forma assíncrona às diretivas da Alexa e a enviar eventos de mudança de estado.
+    * Procure por uma seção relacionada a **"Alexa Skill Messaging"** ou **"Send Alexa Events"**. Ao habilitar, você obterá o:
+        * **Alexa Client Id:** `amzn1.application-oa2-client.******` (Este será gerado para sua skill).
+        * **Alexa Client Secret:** `**************************************************************************************` (Este também será gerado para sua skill; clique em **SHOW** para visualizá-lo).
 
 ---
 
