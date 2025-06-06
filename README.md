@@ -43,13 +43,7 @@ O sistema opera em dois fluxos principais:
     -   **Nome da Skill:** Escolha um nome (ex: "Minha Casa HA").
     -   **Modelo:** Selecione **"Smart Home"**.
     -   **Método de hospedagem:** Selecione **"Provision your own"**.
-3.  No menu lateral da skill, vá para **"Account Linking"**.
-    -   Marque a opção **"Auth Code Grant"**.
-    -   **Authorization URI:** `https://www.amazon.com/ap/oa`
-    -   **Access Token URI:** `https://api.amazon.com/auth/o2/token`
-    -   Anote o **Client ID** e o **Client Secret**.
-    -   **Scope:** Adicione `alexa::skill_messaging`.
-4.  Salve as configurações.
+3.  Salve as configurações.
 #### Parte 2: Configuração na AWS (IAM, DynamoDB, Lambda)
 1.  **Tabela DynamoDB:**
     -   Vá para o serviço **DynamoDB**.
@@ -132,36 +126,47 @@ O sistema opera em dois fluxos principais:
 3.  **Criar Automação do Webhook (`automations.yaml`):**
     -   Esta automação envia as atualizações de estado para a Lambda. É recomendado usar um grupo (`groups.yaml`) para gerenciar a lista de entidades.
         ```yaml
-        - alias: 'Webhook para Sincronização com Alexa'
-          description: 'Envia atualizações de estado para a Lambda da Alexa'
+        - alias: Alexa - Enviar Notificação de Mudança para Lambda
+          description: Envia notificação de mudança de estado de entidades para a função Lambda da Alexa
           mode: parallel
-          max: 20
+          max_exceeded: silent # Evita log de erro se muitas automações tentarem rodar em paralelo
           trigger:
             - platform: state
-              entity_id: group.alexa_sync_entities # Nome do grupo com seus dispositivos
+              entity_id: group.alexa_sync_entities # Use um grupo para gerenciar as entidades
+              to:
+                - "on"
+                - "off"
+                - "locked"
+                - "unlocked"
+                - "open"
+                - "closed"
+                - "unavailable" # Inclua estados de indisponibilidade
+              not_from:
+                - "unknown" # Evita disparos de estados desconhecidos na inicialização
+          condition:
+            # Garante que a mudança de estado é relevante para a Alexa e que o novo estado não é nulo.
+            # Também verifica se o estado anterior não é nulo, para evitar disparos em inicializações ou reinícios.
+            - condition: template
+              value_template: >
+                {{ trigger.to_state is not none and trigger.from_state is not none and
+                   trigger.to_state.state != trigger.from_state.state }}
           action:
-            - choose:
-                - conditions:
-                    - condition: template
-                      value_template: "{{ trigger.to_state is not none and trigger.from_state is not none }}"
-                  sequence:
-                    - service: rest_command.enviar_para_alexa_lambda
-                      data:
-                        payload: >
-                          {
-                            "entities": [
-                              {
-                                "entity_id": "{{ trigger.entity_id }}",
-                                "state": "{{ trigger.to_state.state }}",
-                                "attributes": {{ trigger.to_state.attributes | tojson }}
-                              }
-                            ]
-                          }
-              default:
-                - service: system_log.write
-                  data:
-                    message: "ALEXA SYNC ERROR: Gatilho com estado inválido para {{ trigger.entity_id }}."
-                    level: error
+            - service: rest_command.enviar_para_alexa_lambda
+              data:
+                payload: >
+                  {
+                    "entities": [
+                      {
+                        "entity_id": "{{ trigger.entity_id }}",
+                        "state": "{{ trigger.to_state.state }}",
+                        "attributes": {{ trigger.to_state.attributes | tojson }}
+                      }
+                    ]
+                  }
+            - service: system_log.write
+              data:
+                message: "ALEXA SYNC: Notificação enviada para {{ trigger.entity_id }} com estado {{ trigger.to_state.state }}"
+                level: debug
         ```
 
 ---
@@ -214,13 +219,7 @@ The system operates in two main flows:
 #### Part 1: Amazon Developer Console (Create the Skill)
 1.  Log in to the [Amazon Developer Console](https://developer.amazon.com/alexa/console/ask).
 2.  **Create Skill**: Name it, select the **"Smart Home"** model, and **"Provision your own"** hosting.
-3.  In the skill's side menu, go to **"Account Linking"**.
-    -   Select **"Auth Code Grant"**.
-    -   **Authorization URI:** `https://www.amazon.com/ap/oa`
-    -   **Access Token URI:** `https://api.amazon.com/auth/o2/token`
-    -   Note the **Client ID** and **Client Secret**.
-    -   **Scope:** Add `alexa::skill_messaging`.
-4.  Save the configuration.
+3.  Save the configuration.
 #### Part 2: AWS Setup (IAM, DynamoDB, & Lambda)
 1.  **DynamoDB Table:**
     -   Go to the **DynamoDB** service.
@@ -295,36 +294,47 @@ The system operates in two main flows:
 3.  **Create Webhook Automation (`automations.yaml`):**
     -   This automation sends state updates. Using a group is recommended.
         ```yaml
-        - alias: 'Webhook for Alexa Sync'
-          description: 'Sends state updates to the Alexa Lambda'
+        - alias: Alexa - Enviar Notificação de Mudança para Lambda
+          description: Envia notificação de mudança de estado de entidades para a função Lambda da Alexa
           mode: parallel
-          max: 20
+          max_exceeded: silent # Avoid error log if too many automations try to run in parallel
           trigger:
             - platform: state
-              entity_id: group.alexa_sync_entities # Name of the group with your devices
+              entity_id: group.alexa_sync_entities # Use a group to manage entities
+              to:
+                - "on"
+                - "off"
+                - "locked"
+                - "unlocked"
+                - "open"
+                - "closed"
+                - "unavailable" # Include unavailability states
+              not_from:
+                - "unknown" # Avoid triggers from unknown states on startup
+          condition:
+            # Ensures the state change is relevant for Alexa and the new state is not null.
+            # Also checks that the previous state is not null, to avoid triggers on startup or restarts.
+            - condition: template
+              value_template: >
+                {{ trigger.to_state is not none and trigger.from_state is not none and
+                   trigger.to_state.state != trigger.from_state.state }}
           action:
-            - choose:
-                - conditions:
-                    - condition: template
-                      value_template: "{{ trigger.to_state is not none and trigger.from_state is not none }}"
-                  sequence:
-                    - service: rest_command.enviar_para_alexa_lambda
-                      data:
-                        payload: >
-                          {
-                            "entities": [
-                              {
-                                "entity_id": "{{ trigger.entity_id }}",
-                                "state": "{{ trigger.to_state.state }}",
-                                "attributes": {{ trigger.to_state.attributes | tojson }}
-                              }
-                            ]
-                          }
-              default:
-                - service: system_log.write
-                  data:
-                    message: "ALEXA SYNC ERROR: Trigger has an invalid state for {{ trigger.entity_id }}."
-                    level: error
+            - service: rest_command.enviar_para_alexa_lambda
+              data:
+                payload: >
+                  {
+                    "entities": [
+                      {
+                        "entity_id": "{{ trigger.entity_id }}",
+                        "state": "{{ trigger.to_state.state }}",
+                        "attributes": {{ trigger.to_state.attributes | tojson }}
+                      }
+                    ]
+                  }
+            - service: system_log.write
+              data:
+                message: "ALEXA SYNC: Notification sent for {{ trigger.entity_id }} with state {{ trigger.to_state.state }}"
+                level: debug
         ```
 
 ---
