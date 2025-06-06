@@ -4,7 +4,7 @@ Este projeto implementa uma Skill de Smart Home para a Alexa que se integra com 
 
 ---
 
-## Conteúdo
+## Conteúdo / Contents
 * [Versão em Português](#-versão-em-português)
 * [English Version](#-english-version)
 
@@ -28,6 +28,10 @@ Este projeto implementa uma Skill de Smart Home para a Alexa que se integra com 
 -   **Arquitetura Serverless:** Custo-benefício extremamente alto, operando na maioria dos casos dentro do nível gratuito da AWS.
 
 ### 📐 Arquitetura
+
+![Diagrama da Arquitetura](https://d358voxz2u3oea.cloudfront.net/y8udre%2Fpreview%2F67873314%2Fmain_large.gif?response-content-disposition=inline%3Bfilename%3D%22main_large.gif%22%3B&response-content-type=image%2Fgif&Expires=1749227086&Signature=XeUWSqXhClAnFllwcnp1q0LrjpPItYtwthlwOf4groBDrCRqNlG8t2rf48ezgkUO5Wjy0ud7kZzXrH4FywLPJv7wqUV6623AujkYJzV3tRFSKueAIUWgWm~4at4wchjo9Ex-EFZCMnRYgYKeVDmVho5FQJC-cUUzcfjTB6XOYPI68B52EkuaJXD50RoQjolOW1P31tteixydpYGhEVeyZWOn5AaFh2rpdq-4Ok19F8CIXcMIPoViymVleS5pFEqIviSefcggyhZKg9IQwHQJbdY3ByOeSyjdYZ72MPWtvu7l~m13IiX7iViCZuBP63BwHU97HlNlKiv5v-nu4D4rjQ__&Key-Pair-Id=APKAJT5WQLLEOADKLHBQ)
+
+> **Aviso Importante:** A URL do GIF acima parece ser um link temporário e pode expirar. Para uma solução permanente, é altamente recomendado fazer o upload do arquivo GIF para o seu próprio repositório no GitHub e usar o link direto gerado por ele.
 
 O sistema opera em dois fluxos principais:
 
@@ -70,7 +74,12 @@ O sistema opera em dois fluxos principais:
 2.  **Role do IAM para a Lambda:**
     -   Vá para o serviço **IAM** e crie uma nova **Role** para o serviço **Lambda**.
     -   Anexe a política `AWSLambdaBasicExecutionRole`.
-    -   Crie uma *inline policy* com o JSON abaixo para permitir o acesso ao DynamoDB, substituindo os placeholders:
+    -   Para dar permissão ao DynamoDB, escolha uma das opções abaixo:
+
+        <details>
+        <summary><strong>Opção 1 (Recomendada - Mais Segura)</strong></summary>
+
+        Crie uma *inline policy* com o JSON abaixo para permitir acesso apenas à tabela específica, substituindo os placeholders:
         ```json
         {
             "Version": "2012-10-17",
@@ -84,12 +93,22 @@ O sistema opera em dois fluxos principais:
             ]
         }
         ```
+        </details>
 
+        <details>
+        <summary><strong>Opção 2 (Mais Simples)</strong></summary>
+
+        Anexe uma política já existente da AWS. Esta abordagem é mais fácil, mas menos segura, pois concede permissão total a todas as suas tabelas DynamoDB.
+        1. Na sua Role, clique em **Add permissions -> Attach policies**.
+        2. Busque pela política `AmazonDynamoDBFullAccess`.
+        3. Selecione-a e clique em **Add permissions**.
+        </details>
+        
 3.  **Função Lambda:**
     -   Vá para o serviço **Lambda** e crie uma nova função.
     -   **Runtime:** `Python 3.11` ou superior.
     -   **Role:** Use a Role criada no passo anterior.
-    -   Cole o código do arquivo `lambda_function.py` deste repositório.
+    -   Cole o código-fonte completo do arquivo `lambda_function.py` deste repositório.
     -   **Timeout:** Aumente o timeout para **15 segundos** (em Configuration > General configuration).
     -   **Variáveis de Ambiente:** Adicione as seguintes variáveis:
         -   `HA_URL`: URL pública do seu Home Assistant.
@@ -110,9 +129,11 @@ O sistema opera em dois fluxos principais:
     -   Marque os dispositivos que você quer que a Alexa descubra com a tag definida em `HA_DISCOVERY_TAG`.
         ```yaml
         # em customize.yaml
-        light.luz_da_sala:
-          friendly_name: "Luz da Sala"
-          alexa_erik: true
+        homeassistant:
+          customize:
+            light.luz_da_sala:
+              friendly_name: "Luz da Sala"
+              alexa_erik: true
         ```
 
 2.  **Definir Comando REST (`configuration.yaml`):**
@@ -129,6 +150,7 @@ O sistema opera em dois fluxos principais:
             payload: "{{ payload }}"
             timeout: 30
         ```
+    > **Substitua `SUA_URL_DA_LAMBDA_AQUI` e `SUA_CHAVE_SECRETA_AQUI` pelos seus valores.**
 
 3.  **Criar Automação do Webhook (`automations.yaml`):**
     -   Esta automação envia as atualizações de estado para a Lambda. É recomendado usar um grupo (`groups.yaml`) para gerenciar a lista de entidades.
@@ -139,7 +161,7 @@ O sistema opera em dois fluxos principais:
           max: 20
           trigger:
             - platform: state
-              entity_id: group.entidades_para_sincronizar_com_alexa
+              entity_id: group.alexa_sync_entities # Nome do grupo com seus dispositivos
           action:
             - choose:
                 - conditions:
@@ -181,19 +203,17 @@ Este projeto é distribuído sob a Licença MIT.
 ### ✨ Key Features
 
 -   **Real-Time Sync (HA → Alexa):** Utilizes Home Assistant webhooks to send proactive `ChangeReports` to Alexa, instantly updating device status.
--   **Full Voice Control (Alexa → HA):** Supports a wide range of commands:
-    -   On/Off (`PowerController`)
-    -   Brightness (`BrightnessController`)
-    -   Color / RGB (`ColorController`)
-    -   Color Temperature (Cool White, Warm White, etc.) (`ColorTemperatureController`)
-    -   Blinds & Covers (`RangeController`, `ModeController`)
-    -   Scenes & Scripts Activation (`SceneController`)
+-   **Full Voice Control (Alexa → HA):** Supports a wide range of commands, including On/Off, Brightness, Color, Color Temperature, Covers, and Scenes.
 -   **Token Persistence:** Uses Amazon DynamoDB to securely and permanently store user authentication tokens.
 -   **Layered Security:** The webhook endpoint is protected by a shared secret, header verification, and rate limiting.
 -   **Configurable Discovery:** Provides precise control over which devices are exposed to Alexa via a custom tag.
 -   **Serverless Architecture:** Extremely cost-effective, operating almost entirely within the AWS Free Tier for most residential use cases.
 
 ### 📐 Architecture
+
+![Architecture Diagram](https://d358voxz2u3oea.cloudfront.net/y8udre%2Fpreview%2F67873314%2Fmain_large.gif?response-content-disposition=inline%3Bfilename%3D%22main_large.gif%22%3B&response-content-type=image%2Fgif&Expires=1749227086&Signature=XeUWSqXhClAnFllwcnp1q0LrjpPItYtwthlwOf4groBDrCRqNlG8t2rf48ezgkUO5Wjy0ud7kZzXrH4FywLPJv7wqUV6623AujkYJzV3tRFSKueAIUWgWm~4at4wchjo9Ex-EFZCMnRYgYKeVDmVho5FQJC-cUUzcfjTB6XOYPI68B52EkuaJXD50RoQjolOW1P31tteixydpYGhEVeyZWOn5AaFh2rpdq-4Ok19F8CIXcMIPoViymVleS5pFEqIviSefcggyhZKg9IQwHQJbdY3ByOeSyjdYZ72MPWtvu7l~m13IiX7iViCZuBP63BwHU97HlNlKiv5v-nu4D4rjQ__&Key-Pair-Id=APKAJT5WQLLEOADKLHBQ)
+
+> **Important Notice:** The GIF URL above appears to be a temporary link and may expire. For a permanent solution, it is highly recommended to upload the GIF file directly to your GitHub repository and use the link generated from there.
 
 The system operates in two main flows:
 
@@ -213,15 +233,12 @@ The system operates in two main flows:
 #### Part 1: Amazon Developer Console (Create the Skill)
 
 1.  Log in to the [Amazon Developer Console](https://developer.amazon.com/alexa/console/ask).
-2.  Click **"Create Skill"**.
-    -   **Skill Name:** Choose a name (e.g., "My HA Home").
-    -   **Model:** Select **"Smart Home"**.
-    -   **Hosting Method:** Select **"Provision your own"**.
+2.  **Create Skill**: Name it, select the **"Smart Home"** model, and **"Provision your own"** hosting.
 3.  In the skill's side menu, go to **"Account Linking"**.
     -   Select **"Auth Code Grant"**.
     -   **Authorization URI:** `https://www.amazon.com/ap/oa`
     -   **Access Token URI:** `https://api.amazon.com/auth/o2/token`
-    -   Note down the **Client ID** and **Client Secret**.
+    -   Note the **Client ID** and **Client Secret**.
     -   **Scope:** Add `alexa::skill_messaging`.
 4.  Save the configuration.
 
@@ -236,7 +253,12 @@ The system operates in two main flows:
 2.  **IAM Role for Lambda:**
     -   Go to the **IAM** service and create a new **Role** for the **Lambda** service.
     -   Attach the `AWSLambdaBasicExecutionRole` policy.
-    -   Create an *inline policy* with the JSON below to allow access to the DynamoDB table, replacing the placeholders:
+    -   To grant DynamoDB permissions, choose one of the options below:
+
+        <details>
+        <summary><strong>Option 1 (Recommended - More Secure)</strong></summary>
+        
+        Create an inline policy with the JSON below to allow access only to the specific table, replacing the placeholders:
         ```json
         {
             "Version": "2012-10-17",
@@ -250,39 +272,44 @@ The system operates in two main flows:
             ]
         }
         ```
+        </details>
+
+        <details>
+        <summary><strong>Option 2 (Simpler)</strong></summary>
+
+        Attach an existing AWS policy. This approach is easier but less secure as it grants full permission over all your DynamoDB tables.
+        1. In your Role, click **Add permissions -> Attach policies**.
+        2. Search for the `AmazonDynamoDBFullAccess` policy.
+        3. Select it and click **Add permissions**.
+        </details>
 
 3.  **Lambda Function:**
-    -   Go to the **Lambda** service and create a new function.
+    -   Go to the **Lambda** service and create a new function (`Author from scratch`).
     -   **Runtime:** `Python 3.11` or newer.
     -   **Role:** Use the IAM Role created in the previous step.
-    -   Paste the full source code from the `lambda_function.py` file in this repository.
-    -   **Timeout:** Increase the timeout to **15 seconds** (in Configuration > General configuration).
-    -   **Environment Variables:** Add the following variables:
-        -   `HA_URL`: Your public Home Assistant URL.
-        -   `HA_TOKEN`: A Long-Lived Access Token from your HA profile.
-        -   `ALEXA_CLIENT_ID`: Your skill's Client ID.
-        -   `ALEXA_CLIENT_SECRET`: Your skill's Client Secret.
-        -   `WEBHOOK_SECRET`: A strong, long password you create.
-        -   `DYNAMODB_TABLE`: `alexa-user-tokens`.
-        -   `HA_DISCOVERY_TAG`: The tag for filtering devices (e.g., `alexa_erik`). Leave blank to discover all.
-    -   **Function URL:** Create a **Function URL** with Auth type `NONE` and CORS enabled for `POST` requests. Note the generated URL.
+    -   Paste the full source code from the `lambda_function.py` file.
+    -   **Timeout:** Increase to **15 seconds** (in Configuration > General configuration).
+    -   **Environment Variables:** Add the required variables (`HA_URL`, `HA_TOKEN`, `ALEXA_CLIENT_ID`, `WEBHOOK_SECRET`, etc.).
+    -   **Function URL:** Create a **Function URL** with Auth type `NONE` and CORS enabled for `POST`. Note the generated URL.
 
 4.  **Connect Skill and Lambda:**
-    -   Go back to the **Amazon Developer Console**, navigate to your skill's **"Endpoint"** section, and paste the **ARN** of your Lambda function.
+    -   Go back to the **Amazon Developer Console**, in your skill's **"Endpoint"** section, and paste the **ARN** of your Lambda function.
 
 #### Part 3: Home Assistant Configuration
 
 1.  **Customize Entities (`customize.yaml`):**
-    -   Mark the devices you want Alexa to discover with the tag defined in `HA_DISCOVERY_TAG`.
+    -   Tag the devices you want Alexa to discover.
         ```yaml
         # in customize.yaml
-        light.living_room_light:
-          friendly_name: "Living Room Light"
-          alexa_erik: true
+        homeassistant:
+          customize:
+            light.living_room_light:
+              friendly_name: "Living Room Light"
+              alexa_erik: true
         ```
 
 2.  **Define REST Command (`configuration.yaml`):**
-    -   Add the service that will call your Lambda URL.
+    -   Add the service that will call your Lambda.
         ```yaml
         # in configuration.yaml
         rest_command:
@@ -295,10 +322,9 @@ The system operates in two main flows:
             payload: "{{ payload }}"
             timeout: 30
         ```
-    > **Replace `YOUR_LAMBDA_FUNCTION_URL_HERE` and `YOUR_SECRET_KEY_HERE` with your values.**
 
 3.  **Create Webhook Automation (`automations.yaml`):**
-    -   This automation sends state updates to Lambda. Using a group is recommended to manage the entity list.
+    -   This automation sends state updates. Using a group is recommended.
         ```yaml
         - alias: 'Webhook for Alexa Sync'
           description: 'Sends state updates to the Alexa Lambda'
@@ -306,8 +332,7 @@ The system operates in two main flows:
           max: 20
           trigger:
             - platform: state
-              # RECOMMENDED: Use a group to easily manage entities.
-              entity_id: group.alexa_sync_entities
+              entity_id: group.alexa_sync_entities # Name of the group with your devices
           action:
             - choose:
                 - conditions:
@@ -335,8 +360,8 @@ The system operates in two main flows:
 
 ### 💡 Important Considerations
 
--   **Cloudflare:** This architecture was tested and is recommended for use with **Cloudflare** acting as a reverse proxy for your Home Assistant instance. This adds an extra layer of security (WAF, DDoS protection) and can simplify secure exposure of your instance.
--   **Costs (AWS Free Tier):** The AWS services used (Lambda, DynamoDB) have a generous **Free Tier**. For typical residential use, the operational costs for this skill should be zero or very close to zero, provided the Free Tier limits are not exceeded.
+-   **Cloudflare:** This architecture is tested and recommended for use with **Cloudflare** as a reverse proxy for your Home Assistant instance for added security.
+-   **Costs (AWS Free Tier):** The AWS services used (Lambda, DynamoDB) have a generous **Free Tier**. For typical residential use, costs should be zero or near-zero, provided you stay within the Free Tier limits.
 
 ### 📄 License
 
