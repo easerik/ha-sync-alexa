@@ -29,7 +29,7 @@ Este projeto implementa uma Skill de Smart Home para a Alexa que se integra com 
 
 ### 📐 Arquitetura
 
-![Diagrama da Arquitetura](https://d358voxz2u3oea.cloudfront.net/y8udre%2Fpreview%2F67873314%2Fmain_large.gif?response-content-disposition=inline%3Bfilename%3D%22main_large.gif%22%3B&response-content-type=image%2Fgif&Expires=1749227086&Signature=XeUWSqXhClAnFllwcnp1q0LrjpPItYtwthlwOf4groBDrCRqNlG8t2rf48ezgkUO5Wjy0ud7kZzXrH4FywLPJv7wqUV6623AujkYJzV3tRFSKueAIUWgWm~4at4wchjo9Ex-EFZCMnRYgYKeVDmVho5FQJC-cUUzcfjTB6XOYPI68B52EkuaJXD50RoQjolOW1P31tteixydpYGhEVeyZWOn5AaFh2rpdq-4Ok19F8CIXcMIPoViymVleS5pFEqIviSefcggyhZKg9IQwHQJbdY3ByOeSyjdYZ72MPWtvu7l~m13IiX7iViCZuBP63BwHU97HlNlKiv5v-nu4D4rjQ__&Key-Pair-Id=APKAJT5WQLLEOADKLHBQ)
+![Diagrama da Arquitetura](https://i.ibb.co/v4ff2QDZ/Clean-Shot-2025-06-06-at-13-02-25.gif)
 
 > **Aviso Importante:** A URL do GIF acima parece ser um link temporário e pode expirar. Para uma solução permanente, é altamente recomendado fazer o upload do arquivo GIF para o seu próprio repositório no GitHub e usar o link direto gerado por ele.
 
@@ -211,7 +211,7 @@ Este projeto é distribuído sob a Licença MIT.
 
 ### 📐 Architecture
 
-![Architecture Diagram](https://d358voxz2u3oea.cloudfront.net/y8udre%2Fpreview%2F67873314%2Fmain_large.gif?response-content-disposition=inline%3Bfilename%3D%22main_large.gif%22%3B&response-content-type=image%2Fgif&Expires=1749227086&Signature=XeUWSqXhClAnFllwcnp1q0LrjpPItYtwthlwOf4groBDrCRqNlG8t2rf48ezgkUO5Wjy0ud7kZzXrH4FywLPJv7wqUV6623AujkYJzV3tRFSKueAIUWgWm~4at4wchjo9Ex-EFZCMnRYgYKeVDmVho5FQJC-cUUzcfjTB6XOYPI68B52EkuaJXD50RoQjolOW1P31tteixydpYGhEVeyZWOn5AaFh2rpdq-4Ok19F8CIXcMIPoViymVleS5pFEqIviSefcggyhZKg9IQwHQJbdY3ByOeSyjdYZ72MPWtvu7l~m13IiX7iViCZuBP63BwHU97HlNlKiv5v-nu4D4rjQ__&Key-Pair-Id=APKAJT5WQLLEOADKLHBQ)
+![Architecture Diagram](https://i.ibb.co/v4ff2QDZ/Clean-Shot-2025-06-06-at-13-02-25.gif)
 
 > **Important Notice:** The GIF URL above appears to be a temporary link and may expire. For a permanent solution, it is highly recommended to upload the GIF file directly to your GitHub repository and use the link generated from there.
 
