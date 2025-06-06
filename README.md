@@ -1,6 +1,15 @@
 # Skill Alexa para Home Assistant com Sincronização em Tempo Real via AWS
+# Alexa Skill for Home Assistant with Real-Time Sync via AWS
+
+### 🇧🇷 Versão em Português
 
 Este projeto implementa uma Skill de Smart Home para a Alexa que se integra com o Home Assistant, utilizando AWS Lambda e DynamoDB. Ele oferece uma alternativa robusta e sem custos de assinatura ao Home Assistant Cloud (Nabu Casa), com foco em sincronização em tempo real e controle total.
+
+---
+
+### 🇬🇧 English Version
+
+This project implements an Alexa Smart Home Skill that integrates with Home Assistant, using AWS Lambda and DynamoDB. It offers a robust, subscription-free alternative to the official Home Assistant Cloud (Nabu Casa), with a focus on real-time synchronization and full control.
 
 ---
 
