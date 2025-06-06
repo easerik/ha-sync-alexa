@@ -44,6 +44,7 @@ O sistema opera em dois fluxos principais:
     -   **Modelo:** Selecione **"Smart Home"**.
     -   **Método de hospedagem:** Selecione **"Provision your own"**.
 3.  Salve as configurações.
+
 #### Parte 2: Configuração na AWS (IAM, DynamoDB, Lambda)
 1.  **Tabela DynamoDB:**
     -   Vá para o serviço **DynamoDB**.
@@ -97,6 +98,7 @@ O sistema opera em dois fluxos principais:
     -   **URL da Função:** Crie uma **Function URL** na aba correspondente, com tipo de autenticação `NONE` e CORS habilitado para `POST`. Anote a URL gerada.
 4.  **Conectar Skill e Lambda:**
     -   Volte ao **Amazon Developer Console**, na sua skill, vá em **"Endpoint"** e cole o **ARN** da sua função Lambda na região correspondente.
+
 #### Parte 3: Configuração no Home Assistant
 1.  **Personalizar Entidades (`customize.yaml`):**
     -   Marque os dispositivos que você quer que a Alexa descubra com a tag definida em `HA_DISCOVERY_TAG`.
@@ -126,62 +128,82 @@ O sistema opera em dois fluxos principais:
 3.  **Criar Automação do Webhook (`automations.yaml`):**
     -   Esta automação envia as atualizações de estado para a Lambda. É recomendado usar um grupo (`groups.yaml`) para gerenciar a lista de entidades.
         ```yaml
-        - alias: Alexa - Enviar Notificação de Mudança para Lambda
-          description: Envia notificação de mudança de estado de entidades para a função Lambda da Alexa
-          mode: parallel
-          max_exceeded: silent # Evita log de erro se muitas automações tentarem rodar em paralelo
-          trigger:
-            - platform: state
-              entity_id: group.alexa_sync_entities # Use um grupo para gerenciar as entidades
-              to:
-                - "on"
-                - "off"
-                - "locked"
-                - "unlocked"
-                - "open"
-                - "closed"
-                - "unavailable" # Inclua estados de indisponibilidade
-              not_from:
-                - "unknown" # Evita disparos de estados desconhecidos na inicialização
-          condition:
-            # Garante que a mudança de estado é relevante para a Alexa e que o novo estado não é nulo.
-            # Também verifica se o estado anterior não é nulo, para evitar disparos em inicializações ou reinícios.
-            - condition: template
-              value_template: >
-                {{ trigger.to_state is not none and trigger.from_state is not none and
-                   trigger.to_state.state != trigger.from_state.state }}
-          action:
-            - service: rest_command.enviar_para_alexa_lambda
-              data:
-                payload: >
-                  {
-                    "entities": [
-                      {
-                        "entity_id": "{{ trigger.entity_id }}",
-                        "state": "{{ trigger.to_state.state }}",
-                        "attributes": {{ trigger.to_state.attributes | tojson }}
-                      }
-                    ]
-                  }
-            - service: system_log.write
-              data:
-                message: "ALEXA SYNC: Notificação enviada para {{ trigger.entity_id }} com estado {{ trigger.to_state.state }}"
-                level: debug
+        alias: WEBHOOK-SYNC-ALEXA
+        description: Webhook Alexa - apenas logs de erro
+        trigger:
+          - platform: state
+            entity_id:
+              - light.pendente
+              - light.spot_1
+              - light.spot_2
+              - light.spot_3
+              - light.spot_4
+              - light.spot_5
+              - light.spot_6
+              - light.spot_7
+              - light.spot_8
+              - light.cabeceira
+              - light.cortineiro
+              - light.luz_do_banheiro
+              - light.sonoff_1001138f26
+              - light.sonoff_100123e5f9
+              - cover.cortina_1_invertida
+              - cover.cortina_2_invertida
+        condition: []
+        action:
+          - variables:
+              alexa_payload:
+                entities:
+                  - entity_id: "{{ trigger.entity_id }}"
+                    state: "{{ trigger.to_state.state }}"
+                    brightness: "{{ trigger.to_state.attributes.brightness | default(null) }}"
+                    current_position: "{{ trigger.to_state.attributes.current_position | default(null) }}"
+                timestamp: "{{ now().isoformat() }}"
+                source: home_assistant
+                trigger_entity: "{{ trigger.entity_id }}"
+                change_id: "{{ trigger.entity_id }}_{{ now().timestamp() | int }}"
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: >-
+                      {{ trigger.to_state is not none and trigger.from_state is not none
+                      }}
+                sequence:
+                  - data:
+                      payload: "{{ alexa_payload | tojson }}"
+                    continue_on_error: true
+                    service: rest_command.enviar_para_alexa_lambda
+              default:
+                - data:
+                    message: >-
+                      ALEXA ERROR: Estado inválido para {{ trigger.entity_id }}. 
+                      to_state: {{ trigger.to_state }}, from_state: {{ trigger.from_state
+                      }}
+                    level: error
+                  service: system_log.write
+        mode: parallel
+        max: 20
         ```
 
 ---
 
 ### **Permissões**
 
-Para que a Skill Alexa funcione corretamente, são necessárias as seguintes permissões para acessar recursos e funcionalidades:
+Para que a **Skill Alexa** funcione corretamente, são necessárias as seguintes permissões para acessar recursos e funcionalidades. Você as configurará no **Amazon Developer Console**, dentro da sua skill:
 
-**Habilitar o envio de eventos da Alexa:**
-Você deve habilitar sua skill para enviar mensagens para o endpoint de Eventos de Entrada da Alexa. Isso autoriza sua skill a responder de forma assíncrona às diretivas da Alexa e a enviar eventos de mudança de estado.
+1.  No menu lateral da skill, vá para **"Account Linking"**.
+    * **Marque a opção "Auth Code Grant"**.
+    * **Authorization URI:** `https://www.amazon.com/ap/oa`
+    * **Access Token URI:** `https://api.amazon.com/auth/o2/token`
+    * Anote o **Client ID** e o **Client Secret**.
+    * **Scope:** Adicione `alexa::skill_messaging`.
+    * Salve as configurações.
 
-* **Alexa Skill Messaging:** Use `clientId` e `clientSecret` para a troca de mensagens da skill, permitindo que eventos "fora de sessão" (não invocados pelo cliente) sejam enviados para o código da skill.
-
-    * **Alexa Client Id:** `amzn1.application-oa2-client.edf447576ac8496cb907f2da4d7e5d89`
-    * **Alexa Client Secret:** `**************************************************************************************` (Clique em **SHOW** para visualizar)
+2.  Habilite o envio de eventos da Alexa:
+    * Na seção de **"Permissões"** ou **"Build"** (a localização exata pode variar ligeiramente na interface), você deve habilitar sua skill para **enviar mensagens para o endpoint de Eventos de Entrada da Alexa**. Isso autoriza sua skill a responder de forma assíncrona às diretivas da Alexa e a enviar eventos de mudança de estado.
+    * Procure por uma seção relacionada a **"Alexa Skill Messaging"** ou **"Send Alexa Events"**. Ao habilitar, você obterá o:
+        * **Alexa Client Id:** `amzn1.application-oa2-client.edf447576ac8496cb907f2da4d7e5d89` (Este será gerado para sua skill).
+        * **Alexa Client Secret:** `**************************************************************************************` (Este também será gerado para sua skill; clique em **SHOW** para visualizá-lo).
 
 ---
 
@@ -194,171 +216,3 @@ Você deve habilitar sua skill para enviar mensagens para o endpoint de Eventos 
 -   **Custos (Nível Gratuito da AWS):** Os serviços da AWS utilizados (Lambda, DynamoDB) possuem um **Nível Gratuito (Free Tier)** generoso. Para um uso residencial típico, os custos de operação desta skill devem ser nulos ou muito próximos de zero, desde que os limites do Free Tier não sejam excedidos.
 ### 📄 Licença
 Este projeto é distribuído sob a Licença MIT.
----
-## 🇬🇧 English Version
-### ✨ Key Features
--   **Real-Time Sync (HA → Alexa):** Utilizes Home Assistant webhooks to send proactive `ChangeReports` to Alexa, instantly updating device status.
--   **Full Voice Control (Alexa → HA):** Supports a wide range of commands, including On/Off, Brightness, Color, Color Temperature, Covers, and Scenes.
--   **Token Persistence:** Uses Amazon DynamoDB to securely and permanently store user authentication tokens.
--   **Layered Security:** The webhook endpoint is protected by a shared secret, header verification, and rate limiting.
--   **Configurable Discovery:** Provides precise control over which devices are exposed to Alexa via a custom tag.
--   **Serverless Architecture:** Extremely cost-effective, operating almost entirely within the AWS Free Tier for most residential use cases.
-### 📐 Architecture
-![Architecture Diagram](https://github.com/easerik/ha-sync-alexa/blob/main/ha-alexa.gif)
-> **Important Notice:** The GIF URL above appears to be a temporary link and may expire. For a permanent solution, it is highly recommended to upload the GIF file directly to your GitHub repository and use the link generated from there.
-The system operates in two main flows:
-1.  **Voice Control (Alexa → HA):**
-    `Voice Command → Alexa Service → AWS Lambda (Directive Handler) → Home Assistant API → Physical Device`
-2.  **Status Update (HA → Alexa):**
-    `Physical Device → HA Automation → Webhook (Lambda URL) → AWS Lambda (ChangeReport Handler) → Alexa Service → Alexa App`
-### ⚙️ Prerequisites
-1.  An **AWS (Amazon Web Services)** account.
-2.  A **Home Assistant** instance publicly accessible via HTTPS.
-3.  An **Amazon Developer** account (same as your Alexa account).
-### 🚀 Installation and Setup Guide
-#### Part 1: Amazon Developer Console (Create the Skill)
-1.  Log in to the [Amazon Developer Console](https://developer.amazon.com/alexa/console/ask).
-2.  **Create Skill**: Name it, select the **"Smart Home"** model, and **"Provision your own"** hosting.
-3.  Save the configuration.
-#### Part 2: AWS Setup (IAM, DynamoDB, & Lambda)
-1.  **DynamoDB Table:**
-    -   Go to the **DynamoDB** service.
-    -   **Table name:** `alexa-user-tokens`.
-    -   **Partition key:** `user_id` (Type: `String`).
-    -   Create the table.
-2.  **IAM Role for Lambda:**
-    -   Go to the **IAM** service and create a new **Role** for the **Lambda** service.
-    -   Attach the `AWSLambdaBasicExecutionRole` policy.
-    -   To grant DynamoDB permissions, choose one of the options below:
-        
-
-        Option 1 (Recommended - More Secure)
-        Create an inline policy with the JSON below to allow access only to the specific table, replacing the placeholders:
-        ```json
-        {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Sid": "AllowDynamoDBAccess",
-                    "Effect": "Allow",
-                    "Action": ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:Scan"],
-                    "Resource": "arn:aws:dynamodb:YOUR_REGION:YOUR_ACCOUNT_ID:table/alexa-user-tokens"
-                }
-            ]
-        }
-        ```
-        
-        
-
-        Option 2 (Simpler)
-        Attach an existing AWS policy. This approach is easier but less secure as it grants full permission over all your DynamoDB tables.
-        1. In your Role, click **Add permissions -> Attach policies**.
-        2. Search for the `AmazonDynamoDBFullAccess` policy.
-        3. Select it and click **Add permissions**.
-        
-3.  **Lambda Function:**
-    -   Go to the **Lambda** service and create a new function (`Author from scratch`).
-    -   **Runtime:** `Python 3.11` or newer.
-    -   **Role:** Use the IAM Role created in the previous step.
-    -   Paste the full source code from the `lambda_function.py` file.
-    -   **Timeout:** Increase to **15 seconds** (in Configuration > General configuration).
-    -   **Environment Variables:** Add the required variables (`HA_URL`, `HA_TOKEN`, `ALEXA_CLIENT_ID`, `WEBHOOK_SECRET`, etc.).
-    -   **Function URL:** Create a **Function URL** with Auth type `NONE` and CORS enabled for `POST`. Note the generated URL.
-4.  **Connect Skill and Lambda:**
-    -   Go back to the **Amazon Developer Console**, in your skill's **"Endpoint"** section, and paste the **ARN** of your Lambda function.
-#### Part 3: Home Assistant Configuration
-1.  **Customize Entities (`customize.yaml`):**
-    -   Tag the devices you want Alexa to discover.
-        ```yaml
-        # in customize.yaml
-        homeassistant:
-          customize:
-            light.living_room_light:
-              friendly_name: "Living Room Light"
-              alexa_erik: true
-        ```
-2.  **Define REST Command (`configuration.yaml`):**
-    -   Add the service that will call your Lambda.
-        ```yaml
-        # in configuration.yaml
-        rest_command:
-          enviar_para_alexa_lambda:
-            url: "YOUR_LAMBDA_FUNCTION_URL_HERE"
-            method: POST
-            headers:
-              Content-Type: "application/json"
-              x-webhook-secret: "YOUR_SECRET_KEY_HERE"
-            payload: "{{ payload }}"
-            timeout: 30
-        ```
-3.  **Create Webhook Automation (`automations.yaml`):**
-    -   This automation sends state updates. Using a group is recommended.
-        ```yaml
-        - alias: Alexa - Enviar Notificação de Mudança para Lambda
-          description: Envia notificação de mudança de estado de entidades para a função Lambda da Alexa
-          mode: parallel
-          max_exceeded: silent # Avoid error log if too many automations try to run in parallel
-          trigger:
-            - platform: state
-              entity_id: group.alexa_sync_entities # Use a group to manage entities
-              to:
-                - "on"
-                - "off"
-                - "locked"
-                - "unlocked"
-                - "open"
-                - "closed"
-                - "unavailable" # Include unavailability states
-              not_from:
-                - "unknown" # Avoid triggers from unknown states on startup
-          condition:
-            # Ensures the state change is relevant for Alexa and the new state is not null.
-            # Also checks that the previous state is not null, to avoid triggers on startup or restarts.
-            - condition: template
-              value_template: >
-                {{ trigger.to_state is not none and trigger.from_state is not none and
-                   trigger.to_state.state != trigger.from_state.state }}
-          action:
-            - service: rest_command.enviar_para_alexa_lambda
-              data:
-                payload: >
-                  {
-                    "entities": [
-                      {
-                        "entity_id": "{{ trigger.entity_id }}",
-                        "state": "{{ trigger.to_state.state }}",
-                        "attributes": {{ trigger.to_state.attributes | tojson }}
-                      }
-                    ]
-                  }
-            - service: system_log.write
-              data:
-                message: "ALEXA SYNC: Notification sent for {{ trigger.entity_id }} with state {{ trigger.to_state.state }}"
-                level: debug
-        ```
-
----
-
-### **Permissions**
-
-For the Alexa Skill to function correctly, the following permissions are required to access resources and capabilities:
-
-**Enable sending Alexa Events:**
-You must enable your skill to send messages to the Alexa Inbound Event endpoint. This authorizes your skill to asynchronously respond to Alexa directives and send state change events.
-
-* **Alexa Skill Messaging:** Use `clientId` and `clientSecret` for skill messaging, enabling out-of-session (non-customer invoked) events to be sent to skill code.
-
-    * **Alexa Client Id:** `amzn1.application-oa2-client.edf447576ac8496cb907f2da4d7e5d89`
-    * **Alexa Client Secret:** `**************************************************************************************` (Click **SHOW** to reveal)
-
----
-
-### **Important: For permission changes to take effect, it is crucial to disable the skill, wait 30 seconds, and then re-enable it.**
-
----
-
-### 💡 Important Considerations
--   **Cloudflare:** This architecture is tested and recommended for use with **Cloudflare** as a reverse proxy for your Home Assistant instance for added security.
--   **Costs (AWS Free Tier):** The AWS services used (Lambda, DynamoDB) have a generous **Free Tier**. For typical residential use, costs should be zero or near-zero, provided you stay within the Free Tier limits.
-### 📄 License
-This project is distributed under the MIT License.
