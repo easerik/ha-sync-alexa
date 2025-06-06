@@ -202,7 +202,7 @@ Para que a **Skill Alexa** funcione corretamente, são necessárias as seguintes
 2.  Habilite o envio de eventos da Alexa:
     * Na seção de **"Permissões"** ou **"Build"** (a localização exata pode variar ligeiramente na interface), você deve habilitar sua skill para **enviar mensagens para o endpoint de Eventos de Entrada da Alexa**. Isso autoriza sua skill a responder de forma assíncrona às diretivas da Alexa e a enviar eventos de mudança de estado.
     * Procure por uma seção relacionada a **"Alexa Skill Messaging"** ou **"Send Alexa Events"**. Ao habilitar, você obterá o:
-        * **Alexa Client Id:** `amzn1.application-oa2-client.edf447576ac8496cb907f2da4d7e5d89` (Este será gerado para sua skill).
+        * **Alexa Client Id:** `amzn1.application-oa2-**************` (Este será gerado para sua skill).
         * **Alexa Client Secret:** `**************************************************************************************` (Este também será gerado para sua skill; clique em **SHOW** para visualizá-lo).
 
 ---
