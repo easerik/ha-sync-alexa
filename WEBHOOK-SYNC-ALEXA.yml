@@ -1,0 +1,55 @@
+alias: WEBHOOK-SYNC-ALEXA
+description: Webhook Alexa - apenas logs de erro
+triggers:
+  - entity_id:
+	  - light.pendente
+	  - light.spot_1
+	  - light.spot_2
+	  - light.spot_3
+	  - light.spot_4
+	  - light.spot_5
+	  - light.spot_6
+	  - light.spot_7
+	  - light.spot_8
+	  - light.cabeceira
+	  - light.cortineiro
+	  - light.luz_do_banheiro
+	  - light.sonoff_1001138f26
+	  - light.sonoff_100123e5f9
+	  - cover.cortina_1_invertida
+	  - cover.cortina_2_invertida
+	trigger: state
+conditions: []
+actions:
+  - variables:
+	  alexa_payload:
+		entities:
+		  - entity_id: "{{ trigger.entity_id }}"
+			state: "{{ trigger.to_state.state }}"
+			brightness: "{{ trigger.to_state.attributes.brightness | default(null) }}"
+			current_position: "{{ trigger.to_state.attributes.current_position | default(null) }}"
+		timestamp: "{{ now().isoformat() }}"
+		source: home_assistant
+		trigger_entity: "{{ trigger.entity_id }}"
+		change_id: "{{ trigger.entity_id }}_{{ now().timestamp() | int }}"
+  - choose:
+	  - conditions:
+		  - condition: template
+			value_template: >-
+			  {{ trigger.to_state is not none and trigger.from_state is not none
+			  }}
+		sequence:
+		  - data:
+			  payload: "{{ alexa_payload | tojson }}"
+			continue_on_error: true
+			action: rest_command.enviar_para_alexa_lambda
+	default:
+	  - data:
+		  message: >-
+			ALEXA ERROR: Estado inválido para {{ trigger.entity_id }}. 
+			to_state: {{ trigger.to_state }}, from_state: {{ trigger.from_state
+			}}
+		  level: error
+		action: system_log.write
+mode: parallel
+max: 20
