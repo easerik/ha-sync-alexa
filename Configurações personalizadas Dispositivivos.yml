@@ -1,0 +1,85 @@
+# Configurações personalizadas e outras configurações do Home Assistant
+homeassistant:
+  customize:
+	# --- LUZES ---
+	light.quarto_do_erik:
+	  friendly_name: "QUARTO DO ERIK"
+	  alexa_erik: true
+	light.escritorio_do_erik:
+	  friendly_name: "ESCRITÓRIO DO ERIK"
+	  alexa_erik: true
+	light.sonoff_100123e5f9: # PRATELEIRA
+	  friendly_name: "PRATELEIRA"
+	  alexa_erik: true
+	light.sonoff_1001138f26: # NOVA - ESCADA VARANDA
+	  friendly_name: "ESCADA VARANDA"
+	  alexa_erik: true
+	light.spot_8: # VARANDA
+	  friendly_name: "VARANDA"
+	  alexa_erik: true
+	light.cabeceira:
+	  friendly_name: "CABECEIRA"
+	  alexa_erik: true
+	light.cortineiro:
+	  friendly_name: "CORTINEIRO"
+	  alexa_erik: true
+	light.luz_do_banheiro:
+	  friendly_name: "LUZ DO BANHEIRO"
+	  alexa_erik: true
+	light.pendente:
+	  friendly_name: "PENDENTE"
+	  alexa_erik: true
+	light.spot_1:
+	  friendly_name: "SPOT 1"
+	  alexa_erik: true
+	light.spot_2:
+	  friendly_name: "SPOT 2"
+	  alexa_erik: true
+	light.spot_3:
+	  friendly_name: "SPOT 3"
+	  alexa_erik: true
+	light.spot_4:
+	  friendly_name: "SPOT 4"
+	  alexa_erik: true
+	light.spot_5:
+	  friendly_name: "SPOT 5"
+	  alexa_erik: true
+	light.spot_6:
+	  friendly_name: "SPOT 6"
+	  alexa_erik: true
+	light.spot_7:
+	  friendly_name: "SPOT 7"
+	  alexa_erik: true
+	# --- PERSIANAS / CORTINAS ---
+	cover.cortina_1_invertida:
+	  friendly_name: "Janela 1"
+	  alexa_erik: true
+	cover.cortina_2_invertida:
+	  friendly_name: "Janela 2"
+	  alexa_erik: true
+	cover.persianas_agrupadas: 
+	  friendly_name: "Persianas Agrupadas"
+	  alexa_erik: true
+	# --- SCRIPTS (CENAS PARA ALEXA) ---
+	script.boa_noite_erik:
+	  friendly_name: "Boa Noite Erik"
+	  alexa_erik: true
+	script.desligar_escritorio_do_erik:
+	  friendly_name: "Desligar office do Erik"
+	  alexa_erik: true
+	script.desligar_quarto_do_erik:
+	  friendly_name: "Desligar Quarto do Erik"
+	  alexa_erik: true
+	script.ligar_escritorio_do_erik:
+	  friendly_name: "Ligar office do Erik"
+	  alexa_erik: true
+	script.ligar_quarto_do_erik:
+	  friendly_name: "Ligar Quarto do Erik"
+	  alexa_erik: true
+	script.modo_cinema_do_erik:
+	  friendly_name: "Modo Cinema do Erik"
+	  alexa_erik: true
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
