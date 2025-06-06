@@ -29,7 +29,7 @@ Este projeto implementa uma Skill de Smart Home para a Alexa que se integra com 
 
 ### 📐 Arquitetura
 
-![Diagrama da Arquitetura](https://i.ibb.co/v4ff2QDZ/Clean-Shot-2025-06-06-at-13-02-25.gif)
+![Diagrama da Arquitetura](https://github.com/easerik/ha-sync-alexa/blob/main/ha-alexa.gif)
 
 > **Aviso Importante:** A URL do GIF acima parece ser um link temporário e pode expirar. Para uma solução permanente, é altamente recomendado fazer o upload do arquivo GIF para o seu próprio repositório no GitHub e usar o link direto gerado por ele.
 
@@ -211,7 +211,7 @@ Este projeto é distribuído sob a Licença MIT.
 
 ### 📐 Architecture
 
-![Architecture Diagram](https://i.ibb.co/v4ff2QDZ/Clean-Shot-2025-06-06-at-13-02-25.gif)
+![Architecture Diagram](https://github.com/easerik/ha-sync-alexa/blob/main/ha-alexa.gif)
 
 > **Important Notice:** The GIF URL above appears to be a temporary link and may expire. For a permanent solution, it is highly recommended to upload the GIF file directly to your GitHub repository and use the link generated from there.
 
