@@ -1,0 +1,10 @@
+rest_command:
+  enviar_para_alexa_lambda:
+	url: "SUA_URL_DA_LAMBDA_AQUI"
+	method: POST
+	headers:
+	  Content-Type: "application/json"
+	  x-webhook-secret: "SUA_CHAVE_SECRETA_AQUI"
+	payload: "{{ payload }}"
+	timeout: 30
+	verify_ssl: true
