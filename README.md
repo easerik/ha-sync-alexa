@@ -17,8 +17,8 @@ Este projeto implementa uma Skill de Smart Home para a Alexa que se integra com 
 
 ### ✨ Funcionalidades Principais
 
-* **Sincronização em Tempo Real (HA → Alexa):** Utiliza webhooks do Home Assistant para enviar `ChangeReports` proativos para a Alexa, atualizando o status dos dispositivos instantaneamente.
-* **Controle Completo por Voz (Alexa → HA):** Suporte para uma vasta gama de comandos:
+* **Sincronização em Tempo Real (HA → Alexa):** Usa webhooks do Home Assistant para enviar `ChangeReports` proativos para a Alexa, atualizando o status dos dispositivos instantaneamente.
+* **Controle Completo por Voz (Alexa → HA):** Suporta uma vasta gama de comandos:
     * Ligar/Desligar (`PowerController`)
     * Controle de Brilho (`BrightnessController`)
     * Controle de Cor / RGB (`ColorController`)
@@ -26,9 +26,9 @@ Este projeto implementa uma Skill de Smart Home para a Alexa que se integra com 
     * Controle de Persianas e Cortinas (`RangeController`, `ModeController`)
     * Ativação de Cenas e Scripts (`SceneController`)
 * **Persistência de Tokens:** Utiliza o Amazon DynamoDB para armazenar de forma segura e permanente os tokens de autenticação dos usuários.
-* **Segurança em Camadas:** Endpoint protegido por `secret` compartilhado, verificação de headers e `rate limiting`.
-* **Descoberta Configurável:** Controle exato de quais dispositivos são expostos através de uma tag personalizada.
-* **Arquitetura Serverless:** Custo-benefício extremamente alto, operando na maioria dos casos dentro do nível gratuito da AWS.
+* **Segurança em Camadas:** O endpoint é protegido por um `secret` compartilhado, verificação de headers e `rate limiting`.
+* **Descoberta Configurável:** Permite o controle exato de quais dispositivos são expostos através de uma tag personalizada.
+* **Arquitetura Serverless:** Extremamente econômica, operando na maioria dos casos dentro do nível gratuito da AWS.
 
 ---
 
@@ -196,7 +196,7 @@ O sistema opera em dois fluxos principais:
               default:
                 - data:
                     message: >-
-                      ALEXA ERROR: Estado inválido para {{ trigger.entity_id }}. 
+                      ALEXA ERROR: Estado inválido para {{ trigger.entity_id }}.
                       to_state: {{ trigger.to_state }}, from_state: {{ trigger.from_state
                       }}
                     level: error
@@ -211,10 +211,18 @@ O sistema opera em dois fluxos principais:
 
 Para que a **Skill Alexa** funcione corretamente, são necessárias as seguintes permissões para acessar recursos e funcionalidades. Você as configurará no **Amazon Developer Console**, dentro da sua skill:
 
-1.  **Habilite o envio de eventos da Alexa:**
+1.  No menu lateral da skill, vá para **"Account Linking"**.
+    * **Marque a opção "Auth Code Grant"**.
+    * **Authorization URI:** `https://www.amazon.com/ap/oa`
+    * **Access Token URI:** `https://api.amazon.com/auth/o2/token`
+    * Anote o **Client ID** e o **Client Secret**.
+    * **Scope:** Adicione `alexa::skill_messaging`.
+    * Salve as configurações.
+
+2.  Habilite o envio de eventos da Alexa:
     * Na seção de **"Permissões"** ou **"Build"** (a localização exata pode variar ligeiramente na interface), você deve habilitar sua skill para **enviar mensagens para o endpoint de Eventos de Entrada da Alexa**. Isso autoriza sua skill a responder de forma assíncrona às diretivas da Alexa e a enviar eventos de mudança de estado.
     * Procure por uma seção relacionada a **"Alexa Skill Messaging"** ou **"Send Alexa Events"**. Ao habilitar, você obterá o:
-        * **Alexa Client Id:** `amzn1.application-oa2-client.****` (Este será gerado para sua skill).
+        * **Alexa Client Id:** `amzn1.application-oa2-client.***` (Este será gerado para sua skill).
         * **Alexa Client Secret:** `**************************************************************************************` (Este também será gerado para sua skill; clique em **SHOW** para visualizá-lo).
 
 ---
@@ -226,7 +234,8 @@ Para que a **Skill Alexa** funcione corretamente, são necessárias as seguintes
 ### 💡 Considerações Importantes
 
 * **Cloudflare:** Esta arquitetura foi testada e é recomendada para uso com o **Cloudflare** atuando como um proxy reverso para o seu Home Assistant. Isso adiciona uma camada extra de segurança (WAF, proteção contra DDoS) e pode simplificar a exposição segura da sua instância.
-* **Custos (Nível Gratuito da AWS):** Os serviços da AWS utilizados (Lambda, DynamoDB) possuem um **Nível Gratuito (Free Tier)** generoso. Para um uso residencial típico, os custos de operação desta skill devem ser nulos ou muito próximos de zero, desde que os limites do Free Tier não sejam excedidos.
+* **Descoberta sem Tags:** Embora seja possível configurar o Home Assistant para que a Lambda descubra todas as entidades sem a necessidade de tags, este cenário **não foi testado** como parte deste projeto. O controle explícito via tags (`HA_DISCOVERY_TAG`) é a abordagem validada.
+* **Custos (AWS Nível Gratuito):** Os serviços da AWS utilizados, como **Lambda** e **DynamoDB**, são geralmente elegíveis para o **nível "Sempre Gratuito"** da AWS, desde que os limites estabelecidos sejam respeitados. Por outro lado, o **API Gateway** participa do **Free Tier**, que é gratuito por **12 meses**. Para um uso residencial típico desta skill, os custos de operação devem ser nulos ou muito próximos de zero, desde que os limites desses programas sejam mantidos. mas mantive fora o API Gateway para não gerar nenhum custo 
 
 ---
 
@@ -327,7 +336,7 @@ The system operates in two main flows:
     * Paste the full source code from the `lambda_function.py` file.
     * **Timeout:** Increase to **15 seconds** (in Configuration > General configuration).
     * **Environment Variables:** Add the required variables (`HA_URL`, `HA_TOKEN`, `ALEXA_CLIENT_ID`, `WEBHOOK_SECRET`, etc.).
-    * **Function URL:** Create a **Function URL** with Auth type `NONE` and CORS enabled for `POST`. Note the generated URL.
+    * **Function URL:** Create a **Function URL** in the corresponding tab, with Auth type `NONE` and CORS enabled for `POST`. Note the generated URL.
 4.  **Connect Skill and Lambda:**
     * Go back to the **Amazon Developer Console**, in your skill's **"Endpoint"** section, and paste the **ARN** of your Lambda function.
 
@@ -408,7 +417,7 @@ The system operates in two main flows:
               default:
                 - data:
                     message: >-
-                      ALEXA ERROR: Invalid state for {{ trigger.entity_id }}. 
+                      ALEXA ERROR: Invalid state for {{ trigger.entity_id }}.
                       to_state: {{ trigger.to_state }}, from_state: {{ trigger.from_state
                       }}
                     level: error
@@ -423,11 +432,19 @@ The system operates in two main flows:
 
 For the **Alexa Skill** to function correctly, the following permissions are required to access resources and capabilities. You will configure them in the **Amazon Developer Console**, within your skill:
 
-1.  **Habilite o envio de eventos da Alexa:**
-    * Na seção de **"Permissões"** ou **"Build"** (a localização exata pode variar ligeiramente na interface), você deve habilitar sua skill para **enviar mensagens para o endpoint de Eventos de Entrada da Alexa**. Isso autoriza sua skill a responder de forma assíncrona às diretivas da Alexa e a enviar eventos de mudança de estado.
-    * Procure por uma seção relacionada a **"Alexa Skill Messaging"** ou **"Send Alexa Events"**. Ao habilitar, você obterá o:
-        * **Alexa Client Id:** `amzn1.application-oa2-client.******` (Este será gerado para sua skill).
-        * **Alexa Client Secret:** `**************************************************************************************` (Este também será gerado para sua skill; clique em **SHOW** para visualizá-lo).
+1.  In the skill's side menu, go to **"Account Linking"**.
+    * **Select "Auth Code Grant"**.
+    * **Authorization URI:** `https://www.amazon.com/ap/oa`
+    * **Access Token URI:** `https://api.amazon.com/auth/o2/token`
+    * Note the **Client ID** and **Client Secret**.
+    * **Scope:** Add `alexa::skill_messaging`.
+    * Save the configuration.
+
+2.  Enable sending Alexa Events:
+    * In the **"Permissions"** or **"Build"** section (the exact location might vary slightly in the interface), you must enable your skill to **send messages to the Alexa Inbound Event endpoint**. This authorizes your skill to asynchronously respond to Alexa directives and send state change events.
+    * Look for a section related to **"Alexa Skill Messaging"** or **"Send Alexa Events"**. Upon enabling, you will obtain the:
+        * **Alexa Client Id:** `amzn1.application-oa2-client.***` (This will be generated for your skill).
+        * **Alexa Client Secret:** `**************************************************************************************` (This also will be generated for your skill; click **SHOW** to reveal it).
 
 ---
 
@@ -438,7 +455,8 @@ For the **Alexa Skill** to function correctly, the following permissions are req
 ### 💡 Important Considerations
 
 * **Cloudflare:** This architecture is tested and recommended for use with **Cloudflare** acting as a reverse proxy for your Home Assistant instance. This adds an extra layer of security (WAF, DDoS protection) and can simplify the secure exposure of your instance.
-* **Costs (AWS Free Tier):** The AWS services used (Lambda, DynamoDB) have a generous **Free Tier**. For typical residential use, costs should be zero or near-zero, provided you stay within the Free Tier limits.
+* **Discovery without Tags:** While it's possible to configure Home Assistant for the Lambda to discover all entities without needing tags, this scenario **has not been tested** as part of this project. Explicit control via tags (`HA_DISCOVERY_TAG`) is the validated approach.
+* **Costs (AWS Free Tier):** The AWS services used, such as **Lambda** and **DynamoDB**, are generally eligible for the **AWS "Always Free" tier**, as long as the established limits are respected. **API Gateway**, on the other hand, participates in the **Free Tier**, which is free for **12 months**. For typical residential use of this skill, operation costs should be zero or very close to zero, provided the limits of these programs are maintained. But I kept the API Gateway out to avoid any costs.
 
 ---
 
